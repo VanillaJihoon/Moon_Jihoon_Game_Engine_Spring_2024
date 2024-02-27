@@ -30,36 +30,41 @@ class Game:
 
     def load_data(self):
         game_folder = path.dirname(__file__)
+        img_folder = path.join(game_folder, 'images')
+        self.player_img = pg.image.load(path.join(img_folder, 'nukepfp.png')).convert_alpha()
         self.map_data = []
+        #WIth statement is a context manager
+        #used to ensure a resource is properly closed or released after it is used
+        #This helps to prevent errors.
         with open(path.join(game_folder, 'map.txt'), 'rt') as f:
             for line in f:
                 print(line)
                 self.map_data.append(line)
-        
+
     def new(self):
-        # init all variables, setup groups, instantiate classes
+        print("create new game...")
         self.all_sprites = pg.sprite.Group()
         self.walls = pg.sprite.Group()
-        #self.player = Player(self, 10, 10)
-        #self.all_sprites.add(self.player)
-
-        # self.player = Player(self, 10, 10)
+        self.coins = pg.sprite.Group()
+        self.enemy = pg.sprite.Group()
+        # self.player1 = Player(self, 1, 1)
         # for x in range(10, 20):
         #     Wall(self, x, 5)
         for row, tiles in enumerate(self.map_data):
             print(row)
-            #what is
             for col, tile in enumerate(tiles):
-                # print(col)
-                # print(tiles)
+                print(col)
                 if tile == '1':
                     print("a wall at", row, col)
                     Wall(self, col, row)
                 if tile == '2':
                     self.player = Player(self, col, row)
                 if tile == '3':
-                    print("a killbrick at", row, col)
-                    Killbrick(self, col, row)
+                    Coin(self, col, row)
+                if tile == '4':
+                    Enemy(self, col, row)
+
+
     
     
     def run(self):
@@ -91,30 +96,21 @@ class Game:
         for y in range(0, HEIGHT, TILESIZE):
             pg.draw.line(self.screen, LIGHTGREY, (0, y), (WIDTH, y))
 # Why does the defined draw also appear above itself?
+    def draw_text(self, surface, text, size, color, x, y):
+        font_name = pg.font.match_font('arial')
+        font = pg.font.Font(font_name, size)
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect()
+        text_rect.topleft = (x*TILESIZE,y*TILESIZE)
+        surface.blit(text_surface, text_rect)
+    
     def draw(self):
         self.screen.fill(BGCOLOR)
         self.draw_grid()
         self.all_sprites.draw(self.screen)
+        self.draw_text(self.screen, str(self.player.moneybag), 64, WHITE, 1, 1)
         pg.display.flip()
-        
-    def hits(self):
-        if dir == 'x':
-            hits = pg.sprite.spritecollide(self, self.game.Killbrick, False)
-            if self.vx > 0:
-                self.x = hits[0].rect.top - self.rect.height
-            if self.vx < 0:
-                self.x = hits[0].rect.bottom
-            self.vx = 0
-            self.rect.x = self.x
-        if dir == 'y':
-            hits = pg.sprite.spritecollide(self, self.game.Killbrick, False )
-            if hits:
-                if self.vy > 0:
-                    self.y = hits[0].rect.top - self.rect.height
-                if self.vy < 0:
-                    self.y = hits[0].rect.bottom
-                self.vy = 0
-                self.rect.y = self.y
+    
     
     def events(self):
         for event in pg.event.get():
