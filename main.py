@@ -46,7 +46,8 @@ class Game:
         self.all_sprites = pg.sprite.Group()
         self.walls = pg.sprite.Group()
         self.coins = pg.sprite.Group()
-        self.enemy = pg.sprite.Group()
+        self.mobs = pg.sprite.Group()
+        self.power_ups = pg.sprite.Group()
         # self.player1 = Player(self, 1, 1)
         # for x in range(10, 20):
         #     Wall(self, x, 5)
@@ -62,7 +63,9 @@ class Game:
                 if tile == '3':
                     Coin(self, col, row)
                 if tile == '4':
-                    Enemy(self, col, row)
+                    Mob(self, col, row)
+                if tile == '5':
+                    PowerUp(self, col, row)
 
 
     
