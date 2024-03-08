@@ -18,6 +18,9 @@ class Player(pg.sprite.Sprite):
         self.y = y * TILESIZE
         self.speed = 300
         self.moneybag = 0
+        self.hitpoints = 100
+            
+
 
     def get_keys(self):
         self.vx, self.vy = 0, 0
@@ -52,6 +55,9 @@ class Player(pg.sprite.Sprite):
                     self.y = hits[0].rect.bottom
                 self.vy = 0
                 self.rect.y = self.y
+    
+
+
     # old motion
     # def move(self, dx=0, dy=0):
     #     self.x += dx
@@ -64,6 +70,8 @@ class Player(pg.sprite.Sprite):
                 self.moneybag += 1
             if str(hits[0].__class__.__name__) == "PowerUp":
                 self.speed += 200
+            if str(hits[0].__class__.__name__) == "Mob":
+                self.hitpoints -= 15
                 
     # UPDATE THE UPDATE
     def update(self):
@@ -129,17 +137,40 @@ class Mob(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
-        self.rect.x = x * TILESIZE
-        self.rect.y = y * TILESIZE
+        self.vx, self.vy = 100, 100
+        self.x = x * TILESIZE
+        self.y = y * TILESIZE
         self.speed = 1
+    def collide_with_walls(self, dir):
+        if dir == 'x':
+            # print('colliding on the x')
+            hits = pg.sprite.spritecollide(self, self.game.walls, False)
+            if hits:
+                self.vx *= -1
+                self.rect.x = self.x
+        if dir == 'y':
+            # print('colliding on the y')
+            hits = pg.sprite.spritecollide(self, self.game.walls, False)
+            if hits:
+                self.vy *= -1
+                self.rect.y = self.y
     def update(self):
         # self.rect.x += 1
-        self.rect.x += TILESIZE * self.speed
-        # self.rect.y += TILESIZE * self.speed
-        if self.rect.x > WIDTH or self.rect.x < 0:
-            self.speed *= -1
-        # if self.rect.y > HEIGHT or self.rect.y < 0:
-        #     self.speed *= -1
+        self.x += self.vx * self.game.dt
+        self.y += self.vy * self.game.dt
+        
+        if self.rect.x < self.game.player.rect.x:
+            self.vx = 100
+        if self.rect.x > self.game.player.rect.x:
+            self.vx = -100    
+        if self.rect.y < self.game.player.rect.y:
+            self.vy = 100
+        if self.rect.y > self.game.player.rect.y:
+            self.vy = -100
+        self.rect.x = self.x
+        self.collide_with_walls('x')
+        self.rect.y = self.y
+        self.collide_with_walls('y')
 
 class PowerUp(pg.sprite.Sprite):
     def __init__(self, game, x, y):
@@ -153,3 +184,4 @@ class PowerUp(pg.sprite.Sprite):
         self.y = y
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
+

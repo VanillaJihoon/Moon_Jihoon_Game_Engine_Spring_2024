@@ -1,5 +1,13 @@
 # This file was created by Jihoon Moon
 
+# Goals: To kill every enemy, to not die
+# Rules: HP goes to 0, die
+# Feedback: Enemy hits you, HP goes down. Eat consumable, Buff/Debuff. 
+# Freedom: Movement, Attack
+
+# Health Bar, Weapons, Different enemies (moving)
+
+
 # we are importing libraries
 import pygame as pg
 from settings import *
@@ -7,8 +15,33 @@ from sprites import *
 import sys
 from random import randint
 from os import path
-
+from math import floor
 # We are creating a game class
+
+
+class Cooldown():
+    # sets all properties to zero when instantiated...
+    def __init__(self):
+        self.current_time = 0
+        self.event_time = 0
+        self.delta = 0
+        # ticking ensures the timer is counting...
+    # must use ticking to count up or down
+    def ticking(self):
+        self.current_time = floor((pg.time.get_ticks())/1000)
+        self.delta = self.current_time - self.event_time
+    # resets event time to zero - cooldown reset
+    def countdown(self, x):
+        x = x - self.delta
+        if x != None:
+            return x
+    def event_reset(self):
+        self.event_time = floor((pg.time.get_ticks())/1000)
+    # sets current time
+    def timer(self):
+        self.current_time = floor((pg.time.get_ticks())/1000)
+        
+        
 
 class Game:
     
@@ -42,6 +75,7 @@ class Game:
                 self.map_data.append(line)
 
     def new(self):
+        self.test_timer = Cooldown()
         print("create new game...")
         self.all_sprites = pg.sprite.Group()
         self.walls = pg.sprite.Group()
@@ -90,6 +124,7 @@ class Game:
     def input(self):
         pass
     def update(self):
+        self.test_timer.ticking
         self.all_sprites.update()
 #Drawing a grid
     def draw_grid(self):
@@ -104,14 +139,14 @@ class Game:
         font = pg.font.Font(font_name, size)
         text_surface = font.render(text, True, color)
         text_rect = text_surface.get_rect()
-        text_rect.topleft = (x*TILESIZE,y*TILESIZE)
+        text_rect.topleft = (x,y)
         surface.blit(text_surface, text_rect)
     
     def draw(self):
         self.screen.fill(BGCOLOR)
         self.draw_grid()
         self.all_sprites.draw(self.screen)
-        self.draw_text(self.screen, str(self.player.moneybag), 64, WHITE, 1, 1)
+        self.draw_text(self.screen, str(self.test_timer.countdown(45)), 24, WHITE, WIDTH/2 - 32, 2)
         pg.display.flip()
     
     
