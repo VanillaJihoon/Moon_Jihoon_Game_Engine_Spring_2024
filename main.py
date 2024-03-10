@@ -13,33 +13,11 @@ import pygame as pg
 from settings import *
 from sprites import *
 import sys
+from utils import *
 from random import randint
 from os import path
 from math import floor
 # We are creating a game class
-
-
-class Cooldown():
-    # sets all properties to zero when instantiated...
-    def __init__(self):
-        self.current_time = 0
-        self.event_time = 0
-        self.delta = 0
-        # ticking ensures the timer is counting...
-    # must use ticking to count up or down
-    def ticking(self):
-        self.current_time = floor((pg.time.get_ticks())/1000)
-        self.delta = self.current_time - self.event_time
-    # resets event time to zero - cooldown reset
-    def countdown(self, x):
-        x = x - self.delta
-        if x != None:
-            return x
-    def event_reset(self):
-        self.event_time = floor((pg.time.get_ticks())/1000)
-    # sets current time
-    def timer(self):
-        self.current_time = floor((pg.time.get_ticks())/1000)
         
         
 
@@ -52,11 +30,10 @@ class Game:
         #We set a screen and display and set parameters for it's width and height. Also responsible for FPS
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         #We create a display and print a caption "My First Videogame"
-        pg.display.set_caption("My First Videogame")
+        pg.display.set_caption("TITLE")
         #We set the parameter self with the variable clock to equal the pygame class Clock. (setting a clock)
-        self.clock = pg.time.Clock() #Game ticks
-        pg.key.set_repeat(500, 100) #tick time
-        self.running = True
+        self.clock = pg.time.Clock() #Game tick
+        self.load_data
         #Responsible for running the game (Run method)
         #Later on, game info is stored in this. 
         self.load_data()
@@ -64,7 +41,8 @@ class Game:
     def load_data(self):
         game_folder = path.dirname(__file__)
         img_folder = path.join(game_folder, 'images')
-        self.player_img = pg.image.load(path.join(img_folder, 'nukepfp.png')).convert_alpha()
+        self.snd_folder = path.join(game_folder, 'sounds')
+        self.player_img = pg.image.load(path.join(img_folder, 'self.player_img.png')).convert_alpha()
         self.map_data = []
         #WIth statement is a context manager
         #used to ensure a resource is properly closed or released after it is used
@@ -75,7 +53,10 @@ class Game:
                 self.map_data.append(line)
 
     def new(self):
-        self.test_timer = Cooldown()
+        #pg.mixer.music.load(path.join(self.snd_folder, 'soundtrack2.mp3'))
+
+        #makin the timer (i think)
+        self.cooldown = Timer(self)
         print("create new game...")
         self.all_sprites = pg.sprite.Group()
         self.walls = pg.sprite.Group()
@@ -105,6 +86,7 @@ class Game:
     
     
     def run(self):
+        #pg.mixer.music.play(loops=-1)
         self.playing = True
         while self.playing: 
             self.dt = self.clock.tick(FPS) / 1000
@@ -124,7 +106,7 @@ class Game:
     def input(self):
         pass
     def update(self):
-        self.test_timer.ticking
+        self.cooldown.ticking()
         self.all_sprites.update()
 #Drawing a grid
     def draw_grid(self):
@@ -144,9 +126,11 @@ class Game:
     
     def draw(self):
         self.screen.fill(BGCOLOR)
-        self.draw_grid()
+        #self.draw_grid()
         self.all_sprites.draw(self.screen)
-        self.draw_text(self.screen, str(self.test_timer.countdown(45)), 24, WHITE, WIDTH/2 - 32, 2)
+        self.draw_text(self.screen, str(self.cooldown.current_time), 24, WHITE, WIDTH/2 - 32, 2)
+        self.draw_text(self.screen, str(self.cooldown.event_time), 24, WHITE, WIDTH/2 - 32, 80)
+        self.draw_text(self.screen, str(self.cooldown.get_countdown()), 24, WHITE, WIDTH/2 - 32, 120)
         pg.display.flip()
     
     
@@ -166,7 +150,21 @@ class Game:
 
 
     def show_start_screen(self):
-        pass
+        self.screen.fill(BGCOLOR)
+        self.draw_text(self.screen, "This is the start screen - press any key to play", 24, WHITE, WIDTH/2, HEIGHT/2)
+        pg.display.flip()
+        self.wait_for_key()
+
+    def wait_for_key(self):
+        waiting = True 
+        while waiting:
+            self.clock.tick(FPS)
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    waiting = False
+                    self.quit()
+                if event.type == pg.KEYUP:
+                    waiting = False
     def show_go_screen(self):
         pass
 
