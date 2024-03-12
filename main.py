@@ -172,7 +172,7 @@ class Game:
 
 #We instance game
 g = Game()
-# g.show_start_screen()
+g.show_start_screen()
 while True:
 # it is a method and it is a dependant part of
     g.new()
