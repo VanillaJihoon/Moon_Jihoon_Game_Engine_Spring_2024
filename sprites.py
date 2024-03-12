@@ -50,18 +50,29 @@ class Player(pg.sprite.Sprite):
 
 
     def get_keys(self):
-        self.vx, self.vy = 0, 0
+        self.vx, self.vy = 0, 0 
         keys = pg.key.get_pressed()
+        if keys[pg.K_t]:
+            self.game.test_method()
         if keys[pg.K_LEFT] or keys[pg.K_a]:
             self.vx = -self.speed
-            print(self.rect.x)
-            print(self.rect.y)
         if keys[pg.K_RIGHT] or keys[pg.K_d]:
             self.vx = self.speed
         if keys[pg.K_UP] or keys[pg.K_w]:
-            self.vy = -self.speed
+            self.vy = -self.speed  
         if keys[pg.K_DOWN] or keys[pg.K_s]:
             self.vy = self.speed
+        if keys[pg.K_x]:
+            print("trying to swing...")
+            self.swing()
+        if self.vx != 0 and self.vy != 0:
+            self.vx *= 0.7071
+            self.vy *= 0.7071
+    def swing(self):
+        s = SwordSwing(self.game, self.rect.x, self.rect.y)
+        print(s.rect.x)
+        print(s.rect.y)
+
             
     def collide_with_walls(self, dir):
         if dir == 'x':
@@ -211,4 +222,24 @@ class Mob(pg.sprite.Sprite):
              self.kill()
 
 
-class SwordSwing(pg.sprite.Sprite)
+class SwordSwing(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.slash
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILESIZE*1.5, TILESIZE*1.5))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x
+        self.rect.y = y
+        print("I created a slash...")
+    def collide_with_group(self, group, kill):
+        hits = pg.sprite.spritecollide(self, group, kill)
+        if hits:
+            if str(hits[0].__class__.__name__) == "Mob":
+            MOBHEALTH =- 15
+    def update(self):
+        self.collide_with_group(self.game.coins, True)
+        # pass
