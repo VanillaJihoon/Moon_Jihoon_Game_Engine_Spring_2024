@@ -209,3 +209,6 @@ class Mob(pg.sprite.Sprite):
         collide_with_walls(self, self.game.walls, 'y')
         if self.health <= 0:
              self.kill()
+
+
+class SwordSwing(pg.sprite.Sprite)

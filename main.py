@@ -124,13 +124,13 @@ class Game:
         text_rect = text_surface.get_rect()
         text_rect.topleft = (x,y)
         surface.blit(text_surface, text_rect)
-    
+
+
     def draw(self):
         self.screen.fill(BGCOLOR)
         #self.draw_grid()
         self.all_sprites.draw(self.screen)
         self.draw_text(self.screen, str(self.cooldown.current_time), 24, WHITE, WIDTH/2 - 32, 2)
-        self.draw_text(self.screen, str(self.cooldown.event_time), 24, WHITE, WIDTH/2 - 32, 80)
         self.draw_text(self.screen, str(self.cooldown.get_countdown()), 24, WHITE, WIDTH/2 - 32, 120)
         pg.display.flip()
     
