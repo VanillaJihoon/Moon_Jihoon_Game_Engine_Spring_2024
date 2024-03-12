@@ -42,7 +42,10 @@ class Player(pg.sprite.Sprite):
         self.y = y * TILESIZE
         self.speed = 300
         self.moneybag = 0
+        self.status = ""
+        self.cooling = False
         self.hitpoints = 100
+        self.pos = vec(0,0)
             
 
 
@@ -93,9 +96,21 @@ class Player(pg.sprite.Sprite):
             if str(hits[0].__class__.__name__) == "Coin":
                 self.moneybag += 1
             if str(hits[0].__class__.__name__) == "PowerUp":
-                self.speed += 200
+                print(hits[0].__class__.__name__)
+                #self.game.collect_sound.play()
+                effect = choice(POWER_UP_EFFECTS)
+                self.game.cooldown.cd = 5
+                self.cooling = True
+                print(effect)
+                print(self.cooling)
+                if effect == "Invincible":
+                    self.status = "Invincible"
             if str(hits[0].__class__.__name__) == "Mob":
-                self.hitpoints -= 15
+                # print(hits[0].__class__.__name__)
+                # print("Collided with mob")
+                # self.hitpoints -= 1
+                if self.status == "Invincible":
+                    print("you can't hurt me")
                 
     # UPDATE THE UPDATE
     def update(self):
