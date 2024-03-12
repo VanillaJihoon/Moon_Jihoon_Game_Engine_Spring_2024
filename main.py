@@ -43,6 +43,7 @@ class Game:
         img_folder = path.join(game_folder, 'images')
         self.snd_folder = path.join(game_folder, 'sounds')
         self.player_img = pg.image.load(path.join(img_folder, 'self.player_img.png')).convert_alpha()
+        self.mob_img = pg.image.load(path.join(img_folder, 'mob_img.png')).convert_alpha()
         self.map_data = []
         #WIth statement is a context manager
         #used to ensure a resource is properly closed or released after it is used

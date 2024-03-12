@@ -172,30 +172,25 @@ class Mob(pg.sprite.Sprite):
         self.groups = game.all_sprites, game.mobs
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        # self.image = game.mob_img
-        self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill(WHITE)
+        self.image = self.game.mob_img
         self.rect = self.image.get_rect()
-        # self.hit_rect = MOB_HIT_RECT.copy()
-        # self.hit_rect.center = self.rect.center
         self.pos = vec(x, y) * TILESIZE
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
         self.rect.center = self.pos
+        self.rot = 0
         # added
         self.speed = 150
-        # self.health = MOB_HEALTH
+        self.health = MOBHEALTH
 
     def update(self):
-        self.rect = self.image.get_rect()
+        self.rot = (self.game.player.rect.center - self.pos).angle_to(vec(1, 0))
         self.rect.center = self.pos
+        self.acc = vec(self.speed, 0).rotate(-self.rot)
         self.acc += self.vel * -1
         self.vel += self.acc * self.game.dt
         self.pos += self.vel * self.game.dt + 0.5 * self.acc * self.game.dt ** 2
-        # self.hit_rect.centerx = self.pos.x
         collide_with_walls(self, self.game.walls, 'x')
-        # self.hit_rect.centery = self.pos.y
         collide_with_walls(self, self.game.walls, 'y')
-        # self.rect.center = self.hit_rect.center
-        # if self.health <= 0:
-        #     self.kill()
+        if self.health <= 0:
+             self.kill()
