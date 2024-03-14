@@ -5,6 +5,8 @@ from settings import *
 from utils import *
 from random import choice
 
+MOBHEALTH = 1
+MOBHEALTH2 = 2
 vec =pg.math.Vector2
 
 # write a player class
@@ -45,9 +47,23 @@ class Player(pg.sprite.Sprite):
         self.status = ""
         self.cooling = False
         self.hitpoints = 100
-        self.pos = vec(0,0)
         self.weapon_drawn = False
-            
+        self.pos = vec(0,0)
+        self.dir = vec(0,0)
+    def set_dir(self, d):
+        self.dir = d
+        # return (0,0)
+    def get_dir(self):
+        return self.dir
+    def get_mouse(self):
+        if pg.mouse.get_pressed()[0]:
+            print("left click")
+        if pg.mouse.get_pressed()[1]:
+            print("middle click")
+        if pg.mouse.get_pressed()[2]:
+            print("right click")
+        self.weapon_drawn = False
+        
 
 
     def get_keys(self):
@@ -65,7 +81,7 @@ class Player(pg.sprite.Sprite):
             self.vy = self.speed
         if keys[pg.K_e]:
             if not self.weapon_drawn:
-                Sword(self.game, self.rect.x+TILESIZE, self.rect.y-TILESIZE)
+                Sword(self.game, self.rect.x + self.dir[0]*32, self.rect.y + self.dir[1]*32, abs(32*self.dir[0])+5, abs(32*self.dir[1])+5)
                 self.weapon_drawn = True
     def draw_weapon(self):
         if self.weapon_drawn:
@@ -230,14 +246,16 @@ class Mob2(pg.sprite.Sprite):
         self.game = game
         self.image = self.game.mob_img2
         self.rect = self.image.get_rect()
-        self.pos = vec(x, y) * TILESIZE
+        self.pos = vec(x, y) * TILESIZE * 1.5
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
         self.rect.center = self.pos
         self.rot = 0
         # added
         self.speed = 100
-        self.health = MOBHEALTH
+        self.health = MOBHEALTH2
+        if self.health <= 0:
+            self.kill()
 
     def update(self):
         self.rot = (self.game.player.rect.center - self.pos).angle_to(vec(1, 0))
@@ -248,17 +266,17 @@ class Mob2(pg.sprite.Sprite):
         self.pos += self.vel * self.game.dt + 0.5 * self.acc * self.game.dt ** 2
         collide_with_walls(self, self.game.walls, 'x')
         collide_with_walls(self, self.game.walls, 'y')
-        if self.health <= 0:
-             self.kill()
 
 class Sword(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
+    def __init__(self, game, x, y, w, h):
         self.groups = game.all_sprites, game.weapons
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE/4, TILESIZE))
         self.image.fill(LIGHTBLUE)
         self.rect = self.image.get_rect()
+        self.rect.w = w
+        self.rect.h = h
         self.x = x
         self.y = y
         self.rect.x = x
@@ -266,18 +284,23 @@ class Sword(pg.sprite.Sprite):
         self.speed = 10
         print("I created a sword")
     def collide_with_group(self, group, kill):
-        hits = pg.sprite.spritecollide(self, group, kill)
+        hits = pg.sprite.spritecollide(self, group, False)
         if hits:
             if str(hits[0].__class__.__name__) == "Mob":
-                print("you kilt a mob!")
+                
+                self.kill()
+            if str(hits[0].__class__.__name__) == "Mob2"
+
                 self.kill()
     def update(self):
         # self.collide_with_group(self.game.coins, True)
         # if self.game.player.dir
-        self.rect.x = self.game.player.rect.x+TILESIZE
-        self.rect.y = self.game.player.rect.y-TILESIZE
+        self.rect.x = self.game.player.rect.x + self.game.player.dir[0]*32
+        self.rect.y = self.game.player.rect.y + self.game.player.dir[1]*32
+        self.rect.width = abs(self.game.player.get_dir()[0]*32)+5
+        self.rect.width = abs(self.game.player.get_dir()[1]*32)+5
+        self.image.get_rect()
         self.collide_with_group(self.game.mobs, True)
         if not self.game.player.weapon_drawn:
             print("killed the sword")
             self.kill()
-        # pass

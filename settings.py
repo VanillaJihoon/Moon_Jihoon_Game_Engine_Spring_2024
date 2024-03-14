@@ -18,6 +18,5 @@ LIGHTBLUE = (0, 0, 50)
 FPS = 30
 PLAYER_SPEED = 300
 
-MOBHEALTH = 100
 
 POWER_UP_EFFECTS = ["I can fly", "I'm invincible", "I'm bulletproof"]
