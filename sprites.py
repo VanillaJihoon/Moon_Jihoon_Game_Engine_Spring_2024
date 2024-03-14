@@ -46,6 +46,7 @@ class Player(pg.sprite.Sprite):
         self.cooling = False
         self.hitpoints = 100
         self.pos = vec(0,0)
+        self.weapon_drawn = False
             
 
 
@@ -62,16 +63,14 @@ class Player(pg.sprite.Sprite):
             self.vy = -self.speed  
         if keys[pg.K_DOWN] or keys[pg.K_s]:
             self.vy = self.speed
-        if keys[pg.K_x]:
-            print("trying to swing...")
-            self.swing()
-        if self.vx != 0 and self.vy != 0:
-            self.vx *= 0.7071
-            self.vy *= 0.7071
-    def swing(self):
-        s = SwordSwing(self.game, self.rect.x, self.rect.y)
-        print(s.rect.x)
-        print(s.rect.y)
+        if keys[pg.K_e]:
+            if not self.weapon_drawn:
+                Sword(self.game, self.rect.x+TILESIZE, self.rect.y-TILESIZE)
+                self.weapon_drawn = True
+    def draw_weapon(self):
+        if self.weapon_drawn:
+            Sword(self.game, self.rect.x, self.rect.y)
+        
 
             
     def collide_with_walls(self, dir):
@@ -116,6 +115,9 @@ class Player(pg.sprite.Sprite):
                 print(self.cooling)
                 if effect == "Invincible":
                     self.status = "Invincible"
+                if effect == "I can fly":
+                    self.speed += 500
+                    
             if str(hits[0].__class__.__name__) == "Mob":
                 # print(hits[0].__class__.__name__)
                 # print("Collided with mob")
@@ -221,25 +223,61 @@ class Mob(pg.sprite.Sprite):
         if self.health <= 0:
              self.kill()
 
-
-class SwordSwing(pg.sprite.Sprite):
+class Mob2(pg.sprite.Sprite):
     def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.slash
+        self.groups = game.all_sprites, game.mobs2
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((TILESIZE*1.5, TILESIZE*1.5))
-        self.image.fill(RED)
+        self.image = self.game.mob_img2
+        self.rect = self.image.get_rect()
+        self.pos = vec(x, y) * TILESIZE
+        self.vel = vec(0, 0)
+        self.acc = vec(0, 0)
+        self.rect.center = self.pos
+        self.rot = 0
+        # added
+        self.speed = 100
+        self.health = MOBHEALTH
+
+    def update(self):
+        self.rot = (self.game.player.rect.center - self.pos).angle_to(vec(1, 0))
+        self.rect.center = self.pos
+        self.acc = vec(self.speed, 0).rotate(-self.rot)
+        self.acc += self.vel * -1
+        self.vel += self.acc * self.game.dt
+        self.pos += self.vel * self.game.dt + 0.5 * self.acc * self.game.dt ** 2
+        collide_with_walls(self, self.game.walls, 'x')
+        collide_with_walls(self, self.game.walls, 'y')
+        if self.health <= 0:
+             self.kill()
+
+class Sword(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.weapons
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILESIZE/4, TILESIZE))
+        self.image.fill(LIGHTBLUE)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
         self.rect.x = x
         self.rect.y = y
-        print("I created a slash...")
+        self.speed = 10
+        print("I created a sword")
     def collide_with_group(self, group, kill):
         hits = pg.sprite.spritecollide(self, group, kill)
         if hits:
             if str(hits[0].__class__.__name__) == "Mob":
-            MOBHEALTH =- 15
+                print("you kilt a mob!")
+                self.kill()
     def update(self):
-        self.collide_with_group(self.game.coins, True)
+        # self.collide_with_group(self.game.coins, True)
+        # if self.game.player.dir
+        self.rect.x = self.game.player.rect.x+TILESIZE
+        self.rect.y = self.game.player.rect.y-TILESIZE
+        self.collide_with_group(self.game.mobs, True)
+        if not self.game.player.weapon_drawn:
+            print("killed the sword")
+            self.kill()
         # pass

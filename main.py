@@ -44,6 +44,7 @@ class Game:
         self.snd_folder = path.join(game_folder, 'sounds')
         self.player_img = pg.image.load(path.join(img_folder, 'self.player_img.png')).convert_alpha()
         self.mob_img = pg.image.load(path.join(img_folder, 'mob_img.png')).convert_alpha()
+        self.mob_img2 = pg.image.load(path.join(img_folder, 'mob_img.png')).convert_alpha()
         self.map_data = []
         #WIth statement is a context manager
         #used to ensure a resource is properly closed or released after it is used
@@ -58,12 +59,14 @@ class Game:
 
         #makin the timer (i think)
         self.cooldown = Timer(self)
+        self.cooldown2 = Timer(self)
         print("create new game...")
         self.all_sprites = pg.sprite.Group()
         self.walls = pg.sprite.Group()
         self.coins = pg.sprite.Group()
         self.mobs = pg.sprite.Group()
-        self.slash = pg.sprite.Group()
+        self.mobs2 = pg.sprite.Group()
+        self.weapons = pg.sprite.Group()
         self.power_ups = pg.sprite.Group()
         # self.player1 = Player(self, 1, 1)
         # for x in range(10, 20):
@@ -140,6 +143,9 @@ class Game:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.quit()
+            if event.type == pg.KEYUP:
+                if event.key == pg.K_e:
+                    self.player.weapon_drawn = False
             # if event.type == pg.KEYDOWN:
             #     if event.key == pg.K_LEFT:
             #         self.player.move(dx=-1)
@@ -153,7 +159,7 @@ class Game:
 
     def show_start_screen(self):
         self.screen.fill(BGCOLOR)
-        self.draw_text(self.screen, "This is the start screen - press any key to play", 24, WHITE, WIDTH/2, HEIGHT/2)
+        self.draw_text(self.screen, "This is the start screen - press any key to play", 26, WHITE, WIDTH/3.5, HEIGHT/2)
         pg.display.flip()
         self.wait_for_key()
 
