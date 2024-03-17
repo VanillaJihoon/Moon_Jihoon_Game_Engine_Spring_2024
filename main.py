@@ -19,7 +19,17 @@ from os import path
 from math import floor
 # We are creating a game class
         
-        
+def draw_health_bar(surf, x, y, pct):
+    if pct < 0:
+        pct = 0
+    BAR_LENGTH = 32
+    BAR_HEIGHT = 10
+    fill = (pct / 100) * BAR_LENGTH
+    outline_rect = pg.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
+    fill_rect = pg.Rect(x, y, fill, BAR_HEIGHT)
+    pg.draw.rect(surf, GREEN, fill_rect)
+    pg.draw.rect(surf, WHITE, outline_rect, 2)
+
 
 class Game:
     
@@ -44,7 +54,7 @@ class Game:
         self.snd_folder = path.join(game_folder, 'sounds')
         self.player_img = pg.image.load(path.join(img_folder, 'self.player_img.png')).convert_alpha()
         self.mob_img = pg.image.load(path.join(img_folder, 'mob_img.png')).convert_alpha()
-        self.mob_img2 = pg.image.load(path.join(img_folder, 'mob_img.png')).convert_alpha()
+        self.mob2_img = pg.image.load(path.join(img_folder, 'mob2_img.png')).convert_alpha()
         self.map_data = []
         #WIth statement is a context manager
         #used to ensure a resource is properly closed or released after it is used
@@ -59,7 +69,7 @@ class Game:
 
         #makin the timer (i think)
         self.cooldown = Timer(self)
-        self.cooldown2 = Timer(self)
+        self.flying = Timer(self)
         print("create new game...")
         self.all_sprites = pg.sprite.Group()
         self.walls = pg.sprite.Group()
@@ -86,6 +96,8 @@ class Game:
                     Mob(self, col, row)
                 if tile == '5':
                     PowerUp(self, col, row)
+                if tile == '6':
+                    Mob2(self, col, row)
 
 
     
@@ -102,6 +114,18 @@ class Game:
             #This is output
             self.draw()
 
+    def draw(self):
+            self.screen.fill(BGCOLOR)
+            # self.draw_grid()
+            self.all_sprites.draw(self.screen)
+            # self.player.draw_health_bar(self.screen, self.player.rect.x, self.player.rect.y, self.player.hitpoints)
+            # draw the timer
+            self.draw_text(self.screen, str(self.cooldown.current_time), 24, WHITE, WIDTH/2 - 32, 2)
+            self.draw_text(self.screen, str(self.mob_timer.get_countdown()), 24, WHITE, WIDTH/2 - 32, 60)
+            self.draw_text(self.screen, str(self.cooldown.get_countdown()), 24, WHITE, WIDTH/2 - 32, 120)
+            draw_health_bar(self.screen, self.player.rect.x, self.player.rect.y-8, self.player.hitpoints)
+            pg.display.flip()
+
     def quit(self):
         pg.quit()
         sys.exit()
@@ -111,8 +135,11 @@ class Game:
     def input(self):
         pass
     def update(self):
+        self.flying.ticking()
         self.cooldown.ticking()
         self.all_sprites.update()
+        if self.player.hitpoints < 1:
+            self.playing = False        
 #Drawing a grid
     def draw_grid(self):
         #if the x value goes out of range then nothing happens.
