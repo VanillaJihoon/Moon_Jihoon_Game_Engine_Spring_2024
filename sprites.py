@@ -54,38 +54,8 @@ class Player(pg.sprite.Sprite):
         # return (0,0)
     def get_dir(self):
         return self.dir
-    def get_mouse(self):
-        if pg.mouse.get_pressed()[0]:
-            print("left click")
-        if pg.mouse.get_pressed()[1]:
-            print("middle click")
-        if pg.mouse.get_pressed()[2]:
-            print("right click")
-        self.weapon_drawn = False
-        
-    def get_mouse(self):
-            if pg.mouse.get_pressed()[0]:
-                mx = pg.mouse.get_pos()[0]
-                my = pg.mouse.get_pos()[1]
-                if abs(mx-self.rect.x) > abs(my-self.rect.y):
-                    if mx-self.rect.x > 0:
-                        print("swing to pos x")
-                        Sword(self.game, self.rect.x + self.rect.width, self.rect.y + self.rect.h/2, 32, 5)
 
-                    if mx-self.rect.x < 0:
-                        print("swing to neg x")
-                else:
-                    if my-self.rect.y > 0:
-                        print("swing to pos y")
-                    if my-self.rect.y < 0:
-                        print("swing to neg y")
-                        
-                if not self.weapon_drawn:
-                    self.weapon_drawn = True
-            if pg.mouse.get_pressed()[1]:
-                print("middle click")
-            if pg.mouse.get_pressed()[2]:
-                print("right click")
+        
 
     def get_keys(self):
         self.vx, self.vy = 0, 0
@@ -102,6 +72,13 @@ class Player(pg.sprite.Sprite):
         if keys[pg.K_DOWN] or keys[pg.K_s]:
             self.vy = self.speed
             self.set_dir((0,1))
+        if keys[pg.K_e]:
+            if not self.weapon_drawn:
+                Sword(self.game, self.rect.x+TILESIZE, self.rect.y-TILESIZE)
+                self.weapon_drawn = True
+    def draw_weapon(self):
+        if self.weapon_drawn:
+            Sword(self.game, self.rect.x, self.rect.y)
 
     def collide_with_walls(self, dir):
         if self.material: 
@@ -154,7 +131,7 @@ class Player(pg.sprite.Sprite):
                     self.status = "Invincible"
                 if effect == "I can fly":
                     self.speed += 500
-                    self.material = False 
+                    self.material = False
             if str(hits[0].__class__.__name__) == "Mob":
                 # print(hits[0].__class__.__name__)
                 # print("Collided with mob")
@@ -167,6 +144,13 @@ class Player(pg.sprite.Sprite):
                 self.hitpoints -= 30
                 if self.status == "Invincible":
                     print("you can't hurt me")
+            if str(hits[0].__class__.__name__) == "Ghost":
+                # print(hits[0].__class__.__name__)
+                # print("Collided with mob")
+                self.hitpoints -= 0.1
+                if self.status == "Invincible":
+                    print("you can't hurt me")
+
 
                 
     # UPDATE THE UPDATE
@@ -275,7 +259,7 @@ class Mob2(pg.sprite.Sprite):
         self.game = game
         self.image = self.game.mob2_img
         self.rect = self.image.get_rect()
-        self.pos = vec(x, y) * TILESIZE * 1.5
+        self.pos = vec(x, y) * TILESIZE
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
         self.rect.center = self.pos
@@ -296,16 +280,40 @@ class Mob2(pg.sprite.Sprite):
         if self.hitpoints <= 0:
             self.kill()
 
+class Ghost(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.ghost
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = self.game.ghost_img
+        self.rect = self.image.get_rect()
+        self.pos = vec(x, y) * TILESIZE
+        self.vel = vec(0, 0)
+        self.acc = vec(0, 0)
+        self.rect.center = self.pos
+        self.rot = 0
+        # added
+        self.speed = 100
+        self.hitpoints = 1
+
+    def update(self):
+        self.rot = (self.game.player.rect.center - self.pos).angle_to(vec(1, 0))
+        self.rect.center = self.pos
+        self.acc = vec(self.speed, 0).rotate(-self.rot)
+        self.acc += self.vel * -1
+        self.vel += self.acc * self.game.dt
+        self.pos += self.vel * self.game.dt + 0.5 * self.acc * self.game.dt ** 2
+        if self.hitpoints <= 0:
+            pass
+
 class Sword(pg.sprite.Sprite):
-    def __init__(self, game, x, y, w, h):
+    def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.weapons
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE/4, TILESIZE))
         self.image.fill(LIGHTBLUE)
         self.rect = self.image.get_rect()
-        self.rect.w = w
-        self.rect.h = h
         self.x = x
         self.y = y
         self.rect.x = x

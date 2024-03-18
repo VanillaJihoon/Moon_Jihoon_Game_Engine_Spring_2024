@@ -19,16 +19,6 @@ from os import path
 from math import floor
 # We are creating a game class
         
-def draw_health_bar(surf, x, y, pct):
-    if pct < 0:
-        pct = 0
-    BAR_LENGTH = 32
-    BAR_HEIGHT = 10
-    fill = (pct / 100) * BAR_LENGTH
-    outline_rect = pg.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
-    fill_rect = pg.Rect(x, y, fill, BAR_HEIGHT)
-    pg.draw.rect(surf, GREEN, fill_rect)
-    pg.draw.rect(surf, WHITE, outline_rect, 2)
 
 
 class Game:
@@ -55,6 +45,7 @@ class Game:
         self.player_img = pg.image.load(path.join(img_folder, 'self.player_img.png')).convert_alpha()
         self.mob_img = pg.image.load(path.join(img_folder, 'mob_img.png')).convert_alpha()
         self.mob2_img = pg.image.load(path.join(img_folder, 'mob2_img.png')).convert_alpha()
+        self.ghost_img = pg.image.load(path.join(img_folder, 'ghost_img.png')).convert_alpha()
         self.map_data = []
         #WIth statement is a context manager
         #used to ensure a resource is properly closed or released after it is used
@@ -76,6 +67,7 @@ class Game:
         self.coins = pg.sprite.Group()
         self.mobs = pg.sprite.Group()
         self.mobs2 = pg.sprite.Group()
+        self.ghost = pg.sprite.Group()
         self.weapons = pg.sprite.Group()
         self.power_ups = pg.sprite.Group()
         # self.player1 = Player(self, 1, 1)
@@ -98,6 +90,8 @@ class Game:
                     PowerUp(self, col, row)
                 if tile == '6':
                     Mob2(self, col, row)
+                if tile == '7':
+                    Ghost(self,col,row)
 
 
     
@@ -123,7 +117,7 @@ class Game:
             self.draw_text(self.screen, str(self.cooldown.current_time), 24, WHITE, WIDTH/2 - 32, 2)
             self.draw_text(self.screen, str(self.mob_timer.get_countdown()), 24, WHITE, WIDTH/2 - 32, 60)
             self.draw_text(self.screen, str(self.cooldown.get_countdown()), 24, WHITE, WIDTH/2 - 32, 120)
-            draw_health_bar(self.screen, self.player.rect.x, self.player.rect.y-8, self.player.hitpoints)
+            self.draw_text(self.screen, self.player.hitpoints, 24, WHITE, WIDTH/2 - 32, 90)
             pg.display.flip()
 
     def quit(self):
