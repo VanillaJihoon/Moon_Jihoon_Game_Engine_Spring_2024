@@ -6,6 +6,7 @@
 # Freedom: Movement, Attack
 
 # Health Bar, Weapons, Different enemies (moving)
+# (IMPORTANT) Features I actually added and worked: Different enemies, weapons, powerup types
 
 
 # we are importing libraries
