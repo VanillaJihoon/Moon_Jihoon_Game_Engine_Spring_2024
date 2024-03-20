@@ -70,7 +70,7 @@ class Game:
         self.mobs2 = pg.sprite.Group()
         self.ghost = pg.sprite.Group()
         self.weapons = pg.sprite.Group()
-        self.pew_pews = pg.sprite.Group()
+        self.holy_water = pg.sprite.Group()
         self.power_ups = pg.sprite.Group()
         # self.player1 = Player(self, 1, 1)
         # for x in range(10, 20):
@@ -119,6 +119,7 @@ class Game:
             self.draw_text(self.screen, str(self.cooldown.current_time), 24, WHITE, WIDTH/2 - 32, 2)
             self.draw_text(self.screen, str(self.mob_timer.get_countdown()), 24, WHITE, WIDTH/2 - 32, 60)
             self.draw_text(self.screen, str(self.cooldown.get_countdown()), 24, WHITE, WIDTH/2 - 32, 120)
+            self.draw_text(self.screen, str(self.flying.get_countdown()), 24, WHITE, WIDTH/2 - 32, 90)
             self.draw_text(self.screen, self.player.hitpoints, 24, WHITE, WIDTH/2 - 32, 90)
             pg.display.flip()
 
@@ -186,6 +187,8 @@ class Game:
         pg.display.flip()
         self.wait_for_key()
 
+
+#Determines FPS 
     def wait_for_key(self):
         waiting = True 
         while waiting:

@@ -112,7 +112,7 @@ class Player(pg.sprite.Sprite):
             self.vy *= 0.7071
 
     def pew(self):
-        p = PewPew(self.game, self.rect.x, self.rect.y)
+        p = HolyWater(self.game, self.rect.x, self.rect.y)
         print(p.rect.x)
         print(p.rect.y)
 
@@ -210,13 +210,14 @@ class Player(pg.sprite.Sprite):
         self.collide_with_group(self.game.mobs2, False)
 
 
+#This is the wall
 class Wall(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.walls
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill(BLEU)
+        self.image.fill(WALLCOLOR)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
@@ -233,7 +234,7 @@ class Wall(pg.sprite.Sprite):
         #     self.speed *= -1
             
 
-
+#This is the coin. Currently useless
 class Coin(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.coins
@@ -247,6 +248,7 @@ class Coin(pg.sprite.Sprite):
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
 
+#Powerups. 
 class PowerUp(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.power_ups
@@ -260,6 +262,8 @@ class PowerUp(pg.sprite.Sprite):
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
 
+
+#This is the first mob. It is weak.
 class Mob(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.mobs
@@ -274,8 +278,10 @@ class Mob(pg.sprite.Sprite):
         self.rot = 0
         # added
         self.speed = 150
+        #This is the mob's health
         self.hitpoints = 5
 
+#This is how the mob tracks the player
     def update(self):
         self.rot = (self.game.player.rect.center - self.pos).angle_to(vec(1, 0))
         self.rect.center = self.pos
@@ -285,9 +291,12 @@ class Mob(pg.sprite.Sprite):
         self.pos += self.vel * self.game.dt + 0.5 * self.acc * self.game.dt ** 2
         collide_with_walls(self, self.game.walls, 'x')
         collide_with_walls(self, self.game.walls, 'y')
+        #This will kill the mob if it's health reaches 0...
         if self.hitpoints <= 0:
             self.kill()
 
+
+#Same as mob but stronger and has more health
 class Mob2(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.mobs2
@@ -304,6 +313,7 @@ class Mob2(pg.sprite.Sprite):
         self.speed = 100
         self.hitpoints = 15
 
+#Same as 1st mob...
     def update(self):
         self.rot = (self.game.player.rect.center - self.pos).angle_to(vec(1, 0))
         self.rect.center = self.pos
@@ -313,9 +323,11 @@ class Mob2(pg.sprite.Sprite):
         self.pos += self.vel * self.game.dt + 0.5 * self.acc * self.game.dt ** 2
         collide_with_walls(self, self.game.walls, 'x')
         collide_with_walls(self, self.game.walls, 'y')
+        #Same as first mob... gl killing it tho
         if self.hitpoints <= 0:
             self.kill()
 
+#This mob phases through walls
 class Ghost(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.ghost
@@ -330,8 +342,11 @@ class Ghost(pg.sprite.Sprite):
         self.rot = 0
         # added
         self.speed = 100
+        #Health is redundant because it cannot be hit with sword...
         self.hitpoints = 1
+        #Removed the wall collision to let it phase. 
 
+#Same as regular mob...
     def update(self):
         self.rot = (self.game.player.rect.center - self.pos).angle_to(vec(1, 0))
         self.rect.center = self.pos
@@ -342,6 +357,7 @@ class Ghost(pg.sprite.Sprite):
         if self.hitpoints <= 0:
             pass
 
+#This is the sword. It kills mobs...
 class Sword(pg.sprite.Sprite):
     def __init__(self, game, x, y, w, h, dir):
         self.groups = game.all_sprites, game.weapons
@@ -364,6 +380,7 @@ class Sword(pg.sprite.Sprite):
         print("I created a sword")
     def collide_with_group(self, group, kill):
         hits = pg.sprite.spritecollide(self, group, kill)
+        #Hitting the mobs does what? Determines what happens when you hit x mob.
         if hits:
             if str(hits[0].__class__.__name__) == "Mob":
                 print("you hurt a mob!")
@@ -373,13 +390,16 @@ class Sword(pg.sprite.Sprite):
                 print("you hurt a mob!")
                 hits[0].hitpoints -= 5
                 self.kill()
+                #Remember ghost can only be hit with water
             if str(hits[0].__class__.__name__) == "Ghost":
                 print("You hit nothing...")
+        #Tracking for the sword so it spawns correctly
     def track(self, obj):
         self.vx = obj.vx
         self.vy = obj.vy
         self.rect.width = obj.rect.x+self.dir[0]*32+5
         self.rect.width = obj.rect.y*self.dir[1]*32+5
+        #Check to see if sword exists or not...
     def update(self):
         if self.game.player.weapon_drawn == False:
             self.kill()
@@ -390,9 +410,10 @@ class Sword(pg.sprite.Sprite):
         self.rect.y = self.y
         self.collide_with_group(self.game.mobs, False)
 
-class PewPew(pg.sprite.Sprite):
+#New weapon... Holy water...
+class HolyWater(pg.sprite.Sprite):
     def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.pew_pews
+        self.groups = game.all_sprites, game.holy_water
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE, TILESIZE))
@@ -403,17 +424,12 @@ class PewPew(pg.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
         self.speed = 10
-        print("I created a pew pew...")
+        print("spray...")
+        #Made it so it only kills the ghost...
     def update(self):
-
         self.rect.y -= self.speed
-
         self.collide_with_group(self.game.ghost, True)
     def collide_with_group(self, group, kill):
         hits = pg.sprite.spritecollide(self, group, kill)
         if hits:
-            if str(hits[0].__class__.__name__) == "Mob":
-                print("you hurt a mob!")
-                hits[0].hitpoints -= 0.5
-                self.kill()
-        # pass
+            pass
