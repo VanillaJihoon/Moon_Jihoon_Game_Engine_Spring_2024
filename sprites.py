@@ -7,10 +7,7 @@ from random import choice
 from os import path
 from random import randint
 
-#Clean up the game overall. Make enemies run AWAY from you. 
 
-#Future goals: Make the screen move with the player. Make larger enemies that follow player. Make killing enemies heal you. 
-#Make player sprite shift based on ur hp
 
 vec = pg.math.Vector2
 SPRITESHEET = "spiderplayer.png"
