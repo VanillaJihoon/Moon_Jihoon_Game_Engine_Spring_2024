@@ -85,6 +85,7 @@ class Game:
         # self.player1 = Player(self, 1, 1)
         # for x in range(10, 20):
         #     Wall(self, x, 5)
+        self.map = pg.Surface((len(self.map_data[0])*32, len(self.map_data)*32))
         for row, tiles in enumerate(self.map_data):
             print(row)
             for col, tile in enumerate(tiles):
@@ -167,8 +168,10 @@ class Game:
 
     def draw(self):
         self.screen.fill(BGCOLOR)
+        self.screen.blit(self.map, self.player.map_pos)
+        self.map.fill(BGCOLOR)
         #self.draw_grid()
-        self.all_sprites.draw(self.screen)
+        self.all_sprites.draw(self.map)
         self.draw_text(self.screen, str(self.cooldown.current_time), 24, WHITE, WIDTH/2 - 32, 2)
         self.draw_text(self.screen, str(self.cooldown.get_countdown()), 24, WHITE, WIDTH/2 - 32, 120)
         pg.display.flip()

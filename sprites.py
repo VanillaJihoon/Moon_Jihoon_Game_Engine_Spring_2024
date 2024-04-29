@@ -6,7 +6,7 @@ from utils import *
 from random import choice
 from os import path
 from random import randint
-
+import time
 
 
 vec = pg.math.Vector2
@@ -69,16 +69,17 @@ class Player(pg.sprite.Sprite):
         self.cooling = False
         self.hitpoints = 100
         self.last_shot_time = 0
-        self.flying_time = 0
+        self.bigtime = 2
         self.weapon_drawn = False
-        self.material = True
+        self.small = True
         self.pos = vec(0,0)
         self.dir = vec(0,0)
+        self.map_pos = (self.x+280, self.y-1000)
+        self.mapx, self.mapy = self.map_pos
         # needed for animated sprite
         self.current_frame = 0
         # needed for animated sprite
         self.last_update = 0
-        self.material = True
         # needed for animated sprite
         self.jumping = False
         # needed for animated sprite
@@ -133,7 +134,7 @@ class Player(pg.sprite.Sprite):
         print(p.rect.y)
 
     def collide_with_walls(self, dir):
-        if self.material: 
+        if self.small: 
             if dir == 'x':
                 hits = pg.sprite.spritecollide(self, self.game.walls, False )
                 if hits:
@@ -152,12 +153,6 @@ class Player(pg.sprite.Sprite):
                         self.y = hits[0].rect.bottom
                     self.vy = 0
                     self.rect.y = self.y
-        if not self.material:
-                current_time = pg.time.get_ticks()
-                if current_time - self.flying_time >= 3000:  # 5000 milliseconds = 5 seconds
-                    print("you fly no more")
-                    self.material = True
-                    self.speed -= 500
                 
 
     # old motion
@@ -180,7 +175,9 @@ class Player(pg.sprite.Sprite):
                 print(self.cooling)
                 if effect == "I can fly":
                     self.speed += 500
-                    self.material = False
+                    self.small = False
+
+
             if str(hits[0].__class__.__name__) == "Mob":
                 # print(hits[0].__class__.__name__)
                 # print("Collided with mob")
@@ -227,6 +224,9 @@ class Player(pg.sprite.Sprite):
         # self.power_up_cd.ticking()
         self.x += self.vx * self.game.dt
         self.y += self.vy * self.game.dt
+        self.mapx += -self.vx * self.game.dt
+        self.mapy += -self.vy * self.game.dt
+        self.map_pos = self.mapx, self.mapy
         self.rect.x = self.x
         # add collision later
         self.collide_with_walls('x')
@@ -432,5 +432,7 @@ class PewPew(pg.sprite.Sprite):
         self.timer += 1  # Increment timer
         if self.timer >= self.movement:
             self.speed = 0
+            self.image = pg.Surface((TILESIZE*1.5, TILESIZE*1.5))
+            self.image.fill(BLEU)
         if self.timer >= self.lifespan:
             self.kill()  # Destroy the projectile if the timer exceeds lifespan
