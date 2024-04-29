@@ -20,7 +20,13 @@ from os import path
 from math import floor
 # We are creating a game class
         
-
+'''
+CLEAN UP GAME
+MAKE GAME FOLLOW PLAYER
+MAKE MOBS RUN AWAY FROM PLAYER
+ADD SCORE-RELATED GOALS
+OH MY GOD HELP
+'''
 
 class Game:
     
@@ -70,7 +76,7 @@ class Game:
         self.mobs2 = pg.sprite.Group()
         self.ghost = pg.sprite.Group()
         self.weapons = pg.sprite.Group()
-        self.holy_water = pg.sprite.Group()
+        self.pew_pews = pg.sprite.Group()
         self.power_ups = pg.sprite.Group()
         # self.player1 = Player(self, 1, 1)
         # for x in range(10, 20):
@@ -144,6 +150,7 @@ class Game:
             pg.draw.line(self.screen, LIGHTGREY, (x, 0), (x, HEIGHT))
         for y in range(0, HEIGHT, TILESIZE):
             pg.draw.line(self.screen, LIGHTGREY, (0, y), (WIDTH, y))
+
 # Why does the defined draw also appear above itself?
     def draw_text(self, surface, text, size, color, x, y):
         font_name = pg.font.match_font('arial')
@@ -211,4 +218,3 @@ while True:
     g.new()
     g.run()
     # g.show_go_screen()
-

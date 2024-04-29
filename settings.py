@@ -20,4 +20,4 @@ FPS = 30
 PLAYER_SPEED = 300
 
 
-POWER_UP_EFFECTS = ["I can fly", "I'm invincible", "I'm bulletproof"]
+POWER_UP_EFFECTS = ["I can fly"]

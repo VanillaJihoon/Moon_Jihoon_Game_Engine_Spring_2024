@@ -4,8 +4,18 @@ import pygame as pg
 from settings import *
 from utils import *
 from random import choice
+from os import path
+from random import randint
 
-vec =pg.math.Vector2
+#Clean up the game overall. Make enemies run AWAY from you. 
+
+#Future goals: Make the screen move with the player. Make larger enemies that follow player. Make killing enemies heal you. 
+#Make player sprite shift based on ur hp
+
+vec = pg.math.Vector2
+SPRITESHEET = "spiderplayer.png"
+game_folder = path.dirname(__file__)
+img_folder = path.join(game_folder, 'images')
 
 # write a player class
 def collide_with_walls(sprite, group, dir):
@@ -28,14 +38,30 @@ def collide_with_walls(sprite, group, dir):
             sprite.vel.y = 0
             sprite.rect.centery = sprite.pos.y
 
+class Spritesheet:
+    # utility class for loading and parsing spritesheets
+    def __init__(self, filename):
+        self.spritesheet = pg.image.load(filename).convert()
+
+    def get_image(self, x, y, width, height):
+        # grab an image out of a larger spritesheet
+        image = pg.Surface((width, height))
+        image.blit(self.spritesheet, (0, 0), (x, y, width, height))
+        # image = pg.transform.scale(image, (width, height))
+        image = pg.transform.scale(image, (width * 1, height * 1))
+        return image
+
 class Player(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         #self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image = game.player_img
+        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.spritesheet = Spritesheet(path.join(img_folder, SPRITESHEET))
         #self.image.fill(GREEN)
+        self.load_images()
+        self.image = self.standing_frames[0]
         self.rect = self.image.get_rect()
         self.vx, self.vy = 0, 0
         self.x = x * TILESIZE
@@ -45,36 +71,26 @@ class Player(pg.sprite.Sprite):
         self.status = ""
         self.cooling = False
         self.hitpoints = 100
+        self.last_shot_time = 0
+        self.flying_time = 0
         self.weapon_drawn = False
         self.material = True
         self.pos = vec(0,0)
         self.dir = vec(0,0)
-        self.weapon = Sword(self.game, self.rect.x, self.rect.y, 16, 16, (0,0))
+        # needed for animated sprite
+        self.current_frame = 0
+        # needed for animated sprite
+        self.last_update = 0
+        self.material = True
+        # needed for animated sprite
+        self.jumping = False
+        # needed for animated sprite
+        self.walking = False
     def set_dir(self, d):
         self.dir = d
         # return (0,0)
     def get_dir(self):
         return self.dir
-    def get_mouse(self):
-        if pg.mouse.get_pressed()[0]:
-            # mx = pg.mouse.get_pos()[0]
-            # my = pg.mouse.get_pos()[1]
-            if self.weapon_drawn == False:
-                self.weapon_drawn = True
-                if abs(pg.mouse.get_pos()[0]-self.rect.x) > abs(pg.mouse.get_pos()[1]-self.rect.y):
-                    if pg.mouse.get_pos()[0]-self.rect.x > 0:
-                        print("swing to pos x")
-                        self.weapon = Sword(self.game, self.rect.x+TILESIZE, self.rect.y, 32, 5, (1,0))
-                    if pg.mouse.get_pos()[0]-self.rect.x < 0:
-                        print("swing to neg x")
-                        self.weapon = Sword(self.game, self.rect.x-TILESIZE, self.rect.y, 32, 5, (-1,0))
-                else:
-                    if pg.mouse.get_pos()[1]-self.rect.y > 0:
-                        print("swing to pos y")
-                        self.weapon = Sword(self.game, self.rect.x, self.rect.y+self.rect.height, 5, 32, (0,1))
-                    if pg.mouse.get_pos()[1]-self.rect.y < 0:
-                        print("swing to neg y")
-                        self.weapon = Sword(self.game, self.rect.x, self.rect.y-self.rect.height, 5, 32, (0,-1))
 
     def set_dir(self, d):
         self.dir = d
@@ -105,14 +121,17 @@ class Player(pg.sprite.Sprite):
             self.vy = self.speed
             self.set_dir((0,1))
         if keys[pg.K_e]:
-            print("trying to shoot...")
-            self.pew()
+            current_time = pg.time.get_ticks()
+            if current_time - self.last_shot_time >= 5000:  # 5000 milliseconds = 5 seconds
+                print("trying to shoot...")
+                self.pew()
+                self.last_shot_time = current_time  # Update the time of the last shot
         if self.vx != 0 and self.vy != 0:
             self.vx *= 0.7071
-            self.vy *= 0.7071
+            self.vy *= 0.7071      
 
     def pew(self):
-        p = HolyWater(self.game, self.rect.x, self.rect.y)
+        p = PewPew(self.game, self.rect.x, self.rect.y)
         print(p.rect.x)
         print(p.rect.y)
 
@@ -137,12 +156,11 @@ class Player(pg.sprite.Sprite):
                     self.vy = 0
                     self.rect.y = self.y
         if not self.material:
-                self.game.flying.cd = 5
-                self.cooling = True
-                if self.game.flying.cd < 0:
-                    self.cooling = False
-                if not self.cooling:
+                current_time = pg.time.get_ticks()
+                if current_time - self.flying_time >= 3000:  # 5000 milliseconds = 5 seconds
+                    print("you fly no more")
                     self.material = True
+                    self.speed -= 500
                 
 
     # old motion
@@ -163,21 +181,19 @@ class Player(pg.sprite.Sprite):
                 self.cooling = True
                 print(effect)
                 print(self.cooling)
-                if effect == "Invincible":
-                    self.status = "Invincible"
                 if effect == "I can fly":
                     self.speed += 500
                     self.material = False
             if str(hits[0].__class__.__name__) == "Mob":
                 # print(hits[0].__class__.__name__)
                 # print("Collided with mob")
-                self.hitpoints -= 15
+                #self.hitpoints -= 15
                 if self.status == "Invincible":
                     print("you can't hurt me")
             if str(hits[0].__class__.__name__) == "Mob2":
                 # print(hits[0].__class__.__name__)
                 # print("Collided with mob")
-                self.hitpoints -= 30
+                #self.hitpoints -= 30
                 if self.status == "Invincible":
                     print("you can't hurt me")
             if str(hits[0].__class__.__name__) == "Ghost":
@@ -187,10 +203,29 @@ class Player(pg.sprite.Sprite):
                 if self.status == "Invincible":
                     print("you can't hurt me")
 
+    # needed for animated sprite
+    def load_images(self):
+        self.standing_frames = [self.spritesheet.get_image(0,0, 32, 32), 
+                                self.spritesheet.get_image(32,0, 32, 32)]
+        # for frame in self.standing_frames:
+        #     frame.set_colorkey(BLACK)
 
-                
+        # add other frame sets for different poses etc.
+    # needed for animated sprite        
+    def animate(self):
+        now = pg.time.get_ticks()
+        if now - self.last_update > 350:
+            self.last_update = now
+            self.current_frame = (self.current_frame + 1) % len(self.standing_frames)
+            bottom = self.rect.bottom
+            self.image = self.standing_frames[self.current_frame]
+            self.rect = self.image.get_rect()
+            self.rect.bottom = bottom
     # UPDATE THE UPDATE
     def update(self):
+        self.get_keys()
+        # needed for animated sprite
+        self.animate()
         self.get_keys()
         # self.power_up_cd.ticking()
         self.x += self.vx * self.game.dt
@@ -317,7 +352,9 @@ class Mob2(pg.sprite.Sprite):
     def update(self):
         self.rot = (self.game.player.rect.center - self.pos).angle_to(vec(1, 0))
         self.rect.center = self.pos
-        self.acc = vec(self.speed, 0).rotate(-self.rot)
+        self.acc = vec(self.speed, 0).rotate(+self.rot)
+        #adapted from ChatGPT - 3.5
+        self.acc.x *= -1
         self.acc += self.vel * -1
         self.vel += self.acc * self.game.dt
         self.pos += self.vel * self.game.dt + 0.5 * self.acc * self.game.dt ** 2
@@ -350,73 +387,22 @@ class Ghost(pg.sprite.Sprite):
     def update(self):
         self.rot = (self.game.player.rect.center - self.pos).angle_to(vec(1, 0))
         self.rect.center = self.pos
-        self.acc = vec(self.speed, 0).rotate(-self.rot)
+        self.acc = vec(self.speed, 0).rotate(+self.rot)
         self.acc += self.vel * -1
         self.vel += self.acc * self.game.dt
         self.pos += self.vel * self.game.dt + 0.5 * self.acc * self.game.dt ** 2
         if self.hitpoints <= 0:
             pass
 
-#This is the sword. It kills mobs...
-class Sword(pg.sprite.Sprite):
-    def __init__(self, game, x, y, w, h, dir):
-        self.groups = game.all_sprites, game.weapons
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
-        self.image = pg.Surface((w, h))
-        self.image.fill(WHITE)
-        self.rect = self.image.get_rect()
-        self.vx, self.vy = 0, 0
-        self.x = x
-        self.y = y
-        self.rect.x = x
-        self.rect.y = y
-        self.w = w
-        self.h = h
-        self.rect.width = w
-        self.rect.height = h
-        self.pos = vec(x,y)
-        self.dir = dir
-        print("I created a sword")
-    def collide_with_group(self, group, kill):
-        hits = pg.sprite.spritecollide(self, group, kill)
-        #Hitting the mobs does what? Determines what happens when you hit x mob.
-        if hits:
-            if str(hits[0].__class__.__name__) == "Mob":
-                print("you hurt a mob!")
-                hits[0].hitpoints -= 5
-                self.kill()
-            if str(hits[0].__class__.__name__) == "Mob2":
-                print("you hurt a mob!")
-                hits[0].hitpoints -= 5
-                self.kill()
-                #Remember ghost can only be hit with water
-            if str(hits[0].__class__.__name__) == "Ghost":
-                print("You hit nothing...")
-        #Tracking for the sword so it spawns correctly
-    def track(self, obj):
-        self.vx = obj.vx
-        self.vy = obj.vy
-        self.rect.width = obj.rect.x+self.dir[0]*32+5
-        self.rect.width = obj.rect.y*self.dir[1]*32+5
-        #Check to see if sword exists or not...
-    def update(self):
-        if self.game.player.weapon_drawn == False:
-            self.kill()
-        self.track(self.game.player)
-        self.x += self.vx * self.game.dt
-        self.y += self.vy * self.game.dt
-        self.rect.x = self.x
-        self.rect.y = self.y
-        self.collide_with_group(self.game.mobs, False)
+
 
 #New weapon... Holy water...
-class HolyWater(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.holy_water
+class PewPew(pg.sprite.Sprite):
+    def __init__(self, game, x, y, lifespan=150, movement=25, cooldown = 15):  # Lifespan is in frames
+        self.groups = game.all_sprites, game.pew_pews
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image = pg.Surface((TILESIZE*1, TILESIZE*1))
         self.image.fill(BLEU)
         self.rect = self.image.get_rect()
         self.x = x
@@ -424,12 +410,30 @@ class HolyWater(pg.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
         self.speed = 10
-        print("spray...")
-        #Made it so it only kills the ghost...
-    def update(self):
-        self.rect.y -= self.speed
-        self.collide_with_group(self.game.ghost, True)
+        self.dir = self.game.player.dir
+        self.lifespan = lifespan  # Number of frames before disappearing
+        self.movement = movement
+        self.cooldown = 0
+        self.timer = 0  # Initialize timer
+        print("I created a pew pew...")
+
     def collide_with_group(self, group, kill):
         hits = pg.sprite.spritecollide(self, group, kill)
         if hits:
-            pass
+            if str(hits[0].__class__.__name__) == "Mob":
+                hits[0].hitpoints -= 1
+                print(hits[0].hitpoints)
+            if str(hits[0].__class__.__name__) == "Mob2":
+                hits[0].hitpoints -= 1
+                self.kill
+            # self.kill()
+
+    def update(self):
+        self.collide_with_group(self.game.mobs, False)
+        self.rect.x += self.dir[0]*self.speed
+        self.rect.y += self.dir[1]*self.speed
+        self.timer += 1  # Increment timer
+        if self.timer >= self.movement:
+            self.speed = 0
+        if self.timer >= self.lifespan:
+            self.kill()  # Destroy the projectile if the timer exceeds lifespan
