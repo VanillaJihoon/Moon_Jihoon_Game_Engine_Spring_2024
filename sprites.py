@@ -11,6 +11,7 @@ import time
 
 vec = pg.math.Vector2
 SPRITESHEET = "spiderplayer.png"
+SPRTESHEET2 = "Crow.png"
 game_folder = path.dirname(__file__)
 img_folder = path.join(game_folder, 'images')
 
@@ -73,7 +74,7 @@ class Player(pg.sprite.Sprite):
         self.big = False
         self.weapon_drawn = False
         self.small = True
-        self.exp = 0
+        Player.exp = 0
         self.pos = vec(0,0)
         self.dir = vec(0,0)
         self.map_pos = (self.x+280, self.y-1000)
@@ -371,6 +372,7 @@ class Mob2(pg.sprite.Sprite):
         if self.hitpoints <= 0:
             self.kill()
             Player.exp += 1
+            print(Player.exp)
 
 #This mob phases through walls
 class Ghost(pg.sprite.Sprite):
@@ -378,33 +380,68 @@ class Ghost(pg.sprite.Sprite):
         self.groups = game.all_sprites, game.ghost
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = self.game.ghost_img
+        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.spritesheet = Spritesheet(path.join(img_folder, SPRTESHEET2))
+        self.load_images()
+        self.image = self.standing_frames[0]
         self.rect = self.image.get_rect()
         self.pos = vec(x, y) * TILESIZE
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
+        # needed for animated sprite
+        self.current_frame = 0
+        # needed for animated sprite
+        self.last_update = 0
+        # needed for animated sprite
+        self.jumping = False
+        # needed for animated sprite
+        self.walking = False
         self.rect.center = self.pos
         self.rot = 0
         # added
         self.speed = 100
-        #Health is redundant because it cannot be hit with sword...
-        self.hitpoints = 1
+        #Health is big
+        self.hitpoints = 10000000
+        self.scale_factor = 5  # Change this value to scale the sprite as desired
+        self.scale_images()  # Call scale_images to resize the images
         #Removed the wall collision to let it phase. 
-
+    def load_images(self):
+        self.standing_frames = [self.spritesheet.get_image(0,0, 32, 32), 
+                                self.spritesheet.get_image(32,0, 32, 32)]
+    def animate(self):
+        now = pg.time.get_ticks()
+        if now - self.last_update > 350:
+            self.last_update = now
+            self.current_frame = (self.current_frame + 1) % len(self.standing_frames)
+            bottom = self.rect.bottom
+            self.image = self.standing_frames[self.current_frame]
+            self.rect = self.image.get_rect()
+            self.rect.bottom = bottom
+    #copied from ChatGPT  
+    def scale_images(self):
+        # Scale all images based on the scale_factor
+        for i in range(len(self.standing_frames)):
+            self.standing_frames[i] = pg.transform.scale(self.standing_frames[i], 
+                                                          (self.standing_frames[i].get_width() * self.scale_factor, 
+                                                           self.standing_frames[i].get_height() * self.scale_factor))
+    #ChatGPT ends here        
 #Same as regular mob...
     def update(self):
+        self.animate()
         self.rot = (self.game.player.rect.center - self.pos).angle_to(vec(1, 0))
         self.rect.center = self.pos
-        self.acc = vec(self.speed, 0).rotate(+self.rot)
-        self.acc += self.vel * 1
+        self.acc = vec(self.speed, 0).rotate(-self.rot)
+        self.acc += self.vel * -1
         self.vel += self.acc * self.game.dt
         self.pos += self.vel * self.game.dt + 0.5 * self.acc * self.game.dt ** 2
+        #This will kill the mob if it's health reaches 0...
         if self.hitpoints <= 0:
-            pass
+            self.kill()
+            Player.exp += 1
 
 
 
-#New weapon... Holy water...
+#New weapon... poson
 class PewPew(pg.sprite.Sprite):
     def __init__(self, game, x, y, lifespan=150, movement=25):  # Lifespan is in frames
         self.groups = game.all_sprites, game.pew_pews
@@ -419,11 +456,13 @@ class PewPew(pg.sprite.Sprite):
         self.rect.y = y
         self.speed = 10
         self.dir = self.game.player.dir
+        #modified from GPT
         self.lifespan = lifespan  # Number of frames before disappearing
+        #GPT ends here
         self.movement = movement
         self.timer = 0  # Initialize timer
         print("I created a pew pew...")
-
+    
     def collide_with_group(self, group, kill):
         hits = pg.sprite.spritecollide(self, group, kill)
         if hits:
