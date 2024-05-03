@@ -69,6 +69,7 @@ class Player(pg.sprite.Sprite):
         self.cooling = False
         self.hitpoints = 100
         self.last_shot_time = 0
+        self.last_molt_time = 0
         self.bigtime = 2
         self.weapon_drawn = False
         self.small = True
@@ -127,11 +128,22 @@ class Player(pg.sprite.Sprite):
         if self.vx != 0 and self.vy != 0:
             self.vx *= 0.7071
             self.vy *= 0.7071      
+        if keys[pg.K_r]:
+            current_time = pg.time.get_ticks()
+            if current_time - self.last_molt_time >= 20000:
+                print("trying to molt")
+                self.molt()
+                self.last_molt_time = current_time
 
     def pew(self):
         p = PewPew(self.game, self.rect.x, self.rect.y)
         print(p.rect.x)
         print(p.rect.y)
+    
+    def molt(self):
+        m = Molt(self.game, self.rect.x, self.rect.y)
+        print(m.rect.x)
+        print(m.rect.y)
 
     def collide_with_walls(self, dir):
         if self.small: 
@@ -176,6 +188,7 @@ class Player(pg.sprite.Sprite):
                 if effect == "I can fly":
                     self.speed += 500
                     self.small = False
+                    self.hitpoints * 10
 
 
             if str(hits[0].__class__.__name__) == "Mob":
@@ -196,6 +209,12 @@ class Player(pg.sprite.Sprite):
                 self.hitpoints -= 0.1
                 if self.status == "Invincible":
                     print("you can't hurt me")
+            if str(hits[0].__class__.__name__) == "Molt":
+                # print(hits[0].__class__.__name__)
+                # print("Collided with mob")
+                self.hitpoints += 5
+                self.speed = 0
+                print(self.hitpoints)
 
     # needed for animated sprite
     def load_images(self):
@@ -395,7 +414,7 @@ class Ghost(pg.sprite.Sprite):
 
 #New weapon... Holy water...
 class PewPew(pg.sprite.Sprite):
-    def __init__(self, game, x, y, lifespan=150, movement=25, cooldown = 15):  # Lifespan is in frames
+    def __init__(self, game, x, y, lifespan=150, movement=25):  # Lifespan is in frames
         self.groups = game.all_sprites, game.pew_pews
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
@@ -410,7 +429,6 @@ class PewPew(pg.sprite.Sprite):
         self.dir = self.game.player.dir
         self.lifespan = lifespan  # Number of frames before disappearing
         self.movement = movement
-        self.cooldown = 0
         self.timer = 0  # Initialize timer
         print("I created a pew pew...")
 
@@ -436,3 +454,25 @@ class PewPew(pg.sprite.Sprite):
             self.image.fill(BLEU)
         if self.timer >= self.lifespan:
             self.kill()  # Destroy the projectile if the timer exceeds lifespan
+
+class Molt(pg.sprite.Sprite):
+    def __init__(self, game, x, y, lifespan=10):  # Lifespan is in frames
+        self.groups = game.all_sprites, game.molt
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILESIZE*1, TILESIZE*1))
+        self.image.fill(MOLTCOLOR)
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x
+        self.rect.y = y
+        self.dir = self.game.player.dir
+        self.lifespan = lifespan  # Number of frames before disappearing
+        self.timer = 0
+        print("I molted")
+    def update(self):
+        self.timer += 1  
+        if self.timer >= self.lifespan:
+            self.kill()  # Destroy the projectile if the timer exceeds lifespan
+
