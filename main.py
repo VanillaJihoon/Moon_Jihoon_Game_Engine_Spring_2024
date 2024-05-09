@@ -56,6 +56,7 @@ class Game:
         self.player_img = pg.image.load(path.join(img_folder, 'self.player_img.png')).convert_alpha()
         self.mob_img = pg.image.load(path.join(img_folder, 'mob_img.png')).convert_alpha()
         self.mob2_img = pg.image.load(path.join(img_folder, 'mob2_img.png')).convert_alpha()
+        self.cavewall_img = pg.image.load(path.join(img_folder, 'cavewall_img.png')).convert_alpha()
         self.ghost_img = pg.image.load(path.join(img_folder, 'ghost_img.png')).convert_alpha()
         self.map_data = []
         #WIth statement is a context manager
@@ -182,9 +183,6 @@ class Game:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.quit()
-            if event.type == pg.KEYUP:
-                if event.key == pg.K_e:
-                    self.player.weapon_drawn = False
             # if event.type == pg.KEYDOWN:
             #     if event.key == pg.K_LEFT:
             #         self.player.move(dx=-1)

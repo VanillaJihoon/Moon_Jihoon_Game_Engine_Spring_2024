@@ -80,7 +80,7 @@ class Player(pg.sprite.Sprite):
         Player.exp = 0
         self.pos = vec(0,0)
         self.dir = vec(0,0)
-        self.map_pos = (self.x+280, self.y-1000)
+        self.map_pos = (self.x+280, self.y-12400)
         self.mapx, self.mapy = self.map_pos
         # needed for animated sprite
         self.current_frame = 0
@@ -285,8 +285,7 @@ class Wall(pg.sprite.Sprite):
         self.groups = game.all_sprites, game.walls
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill(WALLCOLOR)
+        self.image = self.game.cavewall_img
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
