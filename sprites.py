@@ -67,13 +67,16 @@ class Player(pg.sprite.Sprite):
         self.speed = 300
         self.moneybag = 0
         self.status = ""
+        Player.killmobs = False
+        self.maxhp = 100
         self.cooling = False
-        self.hitpoints = 100
+        Player.hitpoints = 100
         self.last_shot_time = 0
         self.last_molt_time = 0
-        self.big = False
+        Player.big = False
         self.weapon_drawn = False
-        self.small = True
+        Player.rot = False
+        Player.small = True
         Player.exp = 0
         self.pos = vec(0,0)
         self.dir = vec(0,0)
@@ -148,7 +151,7 @@ class Player(pg.sprite.Sprite):
         print(m.rect.y)
 
     def collide_with_walls(self, dir):
-        if self.small: 
+        if Player.small: 
             if dir == 'x':
                 hits = pg.sprite.spritecollide(self, self.game.walls, False )
                 if hits:
@@ -189,13 +192,12 @@ class Player(pg.sprite.Sprite):
                 print(self.cooling)
                 if effect == "I can fly":
                     self.speed += 500
-                    self.small = False
+                    Player.small = False
             if str(hits[0].__class__.__name__) == "Molt":
+                pass
                 # print(hits[0].__class__.__name__)
                 # print("Collided with mob")
-                self.hitpoints += 5
-                self.speed = 0
-                print(self.hitpoints)
+
 
     # needed for animated sprite
     def load_images(self):
@@ -203,7 +205,13 @@ class Player(pg.sprite.Sprite):
                                 self.spritesheet.get_image(32,0, 32, 32)]
         # for frame in self.standing_frames:
         #     frame.set_colorkey(BLACK)
-
+    def scale_images(self):
+        # Scale all images based on the scale_factor
+        for i in range(len(self.standing_frames)):
+            self.standing_frames[i] = pg.transform.scale(self.standing_frames[i], 
+                                                          (self.standing_frames[i].get_width() * self.scale_factor, 
+                                                           self.standing_frames[i].get_height() * self.scale_factor))
+    
         # add other frame sets for different poses etc.
     # needed for animated sprite        
     def animate(self):
@@ -215,11 +223,22 @@ class Player(pg.sprite.Sprite):
             self.image = self.standing_frames[self.current_frame]
             self.rect = self.image.get_rect()
             self.rect.bottom = bottom
+    
+    def bigspider(self):
+        if Player.small == False and Player.big == True and Player.rot == False:
+            self.scale_factor = 3  # Change this value to scale the sprite as desired
+            self.scale_images()  # Call scale_images to resize the images
+            Player.rot = True
+        
     # UPDATE THE UPDATE
     def update(self):
         self.get_keys()
         # needed for animated sprite
         self.animate()
+        if Player.killmobs == True:
+            self.levelup()
+            self.bigspider()
+            Player.killmobs = False
         self.get_keys()
         # self.power_up_cd.ticking()
         self.x += self.vx * self.game.dt
@@ -239,17 +258,25 @@ class Player(pg.sprite.Sprite):
         if not self.cooling:
             self.collide_with_group(self.game.power_ups, True)
         self.collide_with_group(self.game.mobs, False)
-        self.collide_with_group(self.game.mobs2, False)
+        if Player.hitpoints <= 0:
+            self.kill()
+        if Player.hitpoints > self.maxhp:
+            Player.hitpoints = self.maxhp
+            print(Player.hitpoints)
+
     def levelup(self):
-        if self.exp == 10:
-            self.hitpoints += 50
-            self.speed += 15
-        if self.exp == 50:
-            self.hitpoints += 100
-            self.speed += 50
-        if self.exp == 150:
-            self.big = True
-            self.small = False
+        if Player.exp >= 10 and Player.exp <= 50:
+            self.maxhp += 50
+        if Player.exp >= 50 and Player.exp <= 150:
+            self.maxhp += 100
+        if Player.exp >= 150 and Player.exp <= 400:
+            self.maxhp += 250
+        print(self.maxhp)
+        if Player.exp >= 400:
+            self.maxhp += 500
+            Player.big = True
+            Player.small = False
+
 
 
 #This is the wall
@@ -336,13 +363,15 @@ class Mob(pg.sprite.Sprite):
         #This will kill the mob if it's health reaches 0...
         if self.hitpoints <= 0:
             self.kill()
-            Player.exp += 1
+            Player.exp += 100
+            Player.hitpoints += 50
+            Player.killmobs = True
 
 
 #Same as mob but stronger and has more health
 class Mob2(pg.sprite.Sprite):
     def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.mobs2
+        self.groups = game.all_sprites, game.mobs
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = self.game.mob2_img
@@ -354,13 +383,25 @@ class Mob2(pg.sprite.Sprite):
         self.rot = 0
         # added
         self.speed = 100
-        self.hitpoints = 15
+        self.hitpoints = 2
 
 #Same as 1st mob...
     def update(self):
-        self.rot = (self.game.player.rect.center - self.pos).angle_to(vec(1, 0))
+        player_pos = self.game.player.rect.center
+        distance_to_player = player_pos - self.pos
+        max_distance = TILESIZE*10
+        hover_force = 1
+        #adapted from ChatGPT
+        # Calculate acceleration based on the distance to the player
+        if distance_to_player.length() > max_distance:
+            # If the player is within a certain range, hover around them
+            self.acc = (player_pos - self.pos).normalize() * hover_force
+        else:
+            # If the player is out of range, move towards them
+            self.acc = vec(self.speed, 0).rotate(self.rot)
+        #end of adaptation from ChatGPT
+        self.rot = distance_to_player.angle_to(vec(1, 0))
         self.rect.center = self.pos
-        self.acc = vec(self.speed, 0).rotate(+self.rot)
         #adapted from ChatGPT - 3.5
         self.acc.x *= -1
         self.acc += self.vel * -1
@@ -371,8 +412,10 @@ class Mob2(pg.sprite.Sprite):
         #Same as first mob... gl killing it tho
         if self.hitpoints <= 0:
             self.kill()
-            Player.exp += 1
+            Player.exp += 500
             print(Player.exp)
+            Player.hitpoints += 150
+            Player.killmobs = True
 
 #This mob phases through walls
 class Ghost(pg.sprite.Sprite):
@@ -402,8 +445,10 @@ class Ghost(pg.sprite.Sprite):
         self.speed = 100
         #Health is big
         self.hitpoints = 10000000
+        #adapted from ChatGPT
         self.scale_factor = 5  # Change this value to scale the sprite as desired
         self.scale_images()  # Call scale_images to resize the images
+        #GPT ends here
         #Removed the wall collision to let it phase. 
     def load_images(self):
         self.standing_frames = [self.spritesheet.get_image(0,0, 32, 32), 
@@ -437,7 +482,7 @@ class Ghost(pg.sprite.Sprite):
         #This will kill the mob if it's health reaches 0...
         if self.hitpoints <= 0:
             self.kill()
-            Player.exp += 1
+            
 
 
 
@@ -468,16 +513,13 @@ class PewPew(pg.sprite.Sprite):
         if hits:
             if str(hits[0].__class__.__name__) == "Mob":
                 hits[0].hitpoints -= 1
-                print(hits[0].hitpoints)
             if str(hits[0].__class__.__name__) == "Mob2":
                 hits[0].hitpoints -= 1
-                self.kill
             if str(hits[0].__class__.__name__) == "Ghost":
-                if Player.big == True:
+                if Player.big == True and Player.small == False:
+                    hits[0].hitpoints -= 200000
+                if Player.big == False and Player.small == True:
                     hits[0].hitpoints -= 1
-                self.kill
-                if Player.big == False:
-                    pass
 
             # self.kill()
 
@@ -486,10 +528,16 @@ class PewPew(pg.sprite.Sprite):
         self.rect.x += self.dir[0]*self.speed
         self.rect.y += self.dir[1]*self.speed
         self.timer += 1  # Increment timer
-        if self.timer >= self.movement:
-            self.speed = 0
-            self.image = pg.Surface((TILESIZE*1.5, TILESIZE*1.5))
-            self.image.fill(BLEU)
+        if Player.small == True and Player.big == False:
+            if self.timer >= self.movement:
+                self.speed = 0
+                self.image = pg.Surface((TILESIZE*1.5, TILESIZE*1.5))
+                self.image.fill(BLEU)
+        if Player.big == True and Player.small == False:
+            if self.timer >= self.movement:
+                self.speed = 0
+                self.image = pg.Surface((128, 128))
+                self.image.fill(RED)
         if self.timer >= self.lifespan:
             self.kill()  # Destroy the projectile if the timer exceeds lifespan
 
