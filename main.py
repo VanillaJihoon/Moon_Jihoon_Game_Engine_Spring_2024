@@ -124,7 +124,7 @@ class Game:
             self.draw()
 
     def draw(self):
-            self.screen.fill(BGCOLOR)
+            self.image = self.game.cavewall_img
             # self.draw_grid()
             self.all_sprites.draw(self.screen)
             # self.player.draw_health_bar(self.screen, self.player.rect.x, self.player.rect.y, self.player.hitpoints)
