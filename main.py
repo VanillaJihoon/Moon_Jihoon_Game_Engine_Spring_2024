@@ -58,6 +58,7 @@ class Game:
         self.mob2_img = pg.image.load(path.join(img_folder, 'mob2_img.png')).convert_alpha()
         self.cavewall_img = pg.image.load(path.join(img_folder, 'cavewall_img.png')).convert_alpha()
         self.ghost_img = pg.image.load(path.join(img_folder, 'ghost_img.png')).convert_alpha()
+        self.dirt_img = pg.image.load(path.join(img_folder, 'dirt_img.png')).convert_alpha()
         self.map_data = []
         #WIth statement is a context manager
         #used to ensure a resource is properly closed or released after it is used
@@ -76,6 +77,7 @@ class Game:
         print("create new game...")
         self.all_sprites = pg.sprite.Group()
         self.walls = pg.sprite.Group()
+        self.walls2 = pg.sprite.Group()
         self.coins = pg.sprite.Group()
         self.mobs = pg.sprite.Group()
         self.mobs2 = pg.sprite.Group()
@@ -107,6 +109,8 @@ class Game:
                     Mob2(self, col, row)
                 if tile == '7':
                     Ghost(self,col,row)
+                if tile == '8':
+                    Wall2(self,col,row)
 
 
     
@@ -124,7 +128,6 @@ class Game:
             self.draw()
 
     def draw(self):
-            self.image = self.game.cavewall_img
             # self.draw_grid()
             self.all_sprites.draw(self.screen)
             # self.player.draw_health_bar(self.screen, self.player.rect.x, self.player.rect.y, self.player.hitpoints)

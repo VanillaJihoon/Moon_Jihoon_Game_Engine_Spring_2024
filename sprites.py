@@ -151,25 +151,42 @@ class Player(pg.sprite.Sprite):
         print(m.rect.y)
 
     def collide_with_walls(self, dir):
-        if Player.small: 
-            if dir == 'x':
-                hits = pg.sprite.spritecollide(self, self.game.walls, False )
-                if hits:
-                    if self.vx > 0:
-                        self.x = hits[0].rect.left - self.rect.width
-                    if self.vx < 0:
-                        self.x = hits[0].rect.right
-                    self.vx = 0
-                    self.rect.x = self.x
-            if dir == 'y':
-                hits = pg.sprite.spritecollide(self, self.game.walls, False )
-                if hits:
-                    if self.vy > 0:
-                        self.y = hits[0].rect.top - self.rect.height
-                    if self.vy < 0:
-                        self.y = hits[0].rect.bottom
-                    self.vy = 0
-                    self.rect.y = self.y
+        if dir == 'x':
+            hits = pg.sprite.spritecollide(self, self.game.walls, False )
+            if hits:
+                if self.vx > 0:
+                    self.x = hits[0].rect.left - self.rect.width
+                if self.vx < 0:
+                    self.x = hits[0].rect.right
+                self.vx = 0
+                self.rect.x = self.x
+        if dir == 'y':
+            hits = pg.sprite.spritecollide(self, self.game.walls, False )
+            if hits:
+                if self.vy > 0:
+                    self.y = hits[0].rect.top - self.rect.height
+                if self.vy < 0:
+                    self.y = hits[0].rect.bottom
+                self.vy = 0
+                self.rect.y = self.y
+        if dir == 'x':
+            hits = pg.sprite.spritecollide(self, self.game.walls2, False )
+            if hits:
+                if self.vx > 0:
+                    self.x = hits[0].rect.left - self.rect.width
+                if self.vx < 0:
+                    self.x = hits[0].rect.right
+                self.vx = 0
+                self.rect.x = self.x
+        if dir == 'y':
+            hits = pg.sprite.spritecollide(self, self.game.walls2, False )
+            if hits:
+                if self.vy > 0:
+                    self.y = hits[0].rect.top - self.rect.height
+                if self.vy < 0:
+                    self.y = hits[0].rect.bottom
+                self.vy = 0
+                self.rect.y = self.y
                 
 
     # old motion
@@ -205,6 +222,7 @@ class Player(pg.sprite.Sprite):
                                 self.spritesheet.get_image(32,0, 32, 32)]
         # for frame in self.standing_frames:
         #     frame.set_colorkey(BLACK)
+    #adapted from ChatGPT
     def scale_images(self):
         # Scale all images based on the scale_factor
         for i in range(len(self.standing_frames)):
@@ -286,6 +304,28 @@ class Wall(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = self.game.cavewall_img
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+        self.speed = 0
+    def update(self):
+        # self.rect.x += 1
+        self.rect.x += TILESIZE * self.speed
+        # self.rect.y += TILESIZE * self.speed
+        if self.rect.x > WIDTH or self.rect.x < 0:
+            self.speed *= -1
+        # if self.rect.y > HEIGHT or self.rect.y < 0:
+        #     self.speed *= -1
+
+#This is the wall
+class Wall2(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.walls2
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = self.game.dirt_img
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
