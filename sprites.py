@@ -49,6 +49,7 @@ class Spritesheet:
         image = pg.transform.scale(image, (width * 1, height * 1))
         return image
 
+
 class Player(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites
@@ -70,13 +71,13 @@ class Player(pg.sprite.Sprite):
         Player.killmobs = False
         self.maxhp = 100
         self.cooling = False
-        Player.hitpoints = 100
         self.last_shot_time = 0
         self.last_molt_time = 0
         Player.big = False
         self.weapon_drawn = False
         Player.rot = False
         Player.small = True
+        self.hitpoints = 100
         Player.exp = 0
         self.pos = vec(0,0)
         self.dir = vec(0,0)
@@ -169,24 +170,7 @@ class Player(pg.sprite.Sprite):
                     self.y = hits[0].rect.bottom
                 self.vy = 0
                 self.rect.y = self.y
-        if dir == 'x':
-            hits = pg.sprite.spritecollide(self, self.game.walls2, False )
-            if hits:
-                if self.vx > 0:
-                    self.x = hits[0].rect.left - self.rect.width
-                if self.vx < 0:
-                    self.x = hits[0].rect.right
-                self.vx = 0
-                self.rect.x = self.x
-        if dir == 'y':
-            hits = pg.sprite.spritecollide(self, self.game.walls2, False )
-            if hits:
-                if self.vy > 0:
-                    self.y = hits[0].rect.top - self.rect.height
-                if self.vy < 0:
-                    self.y = hits[0].rect.bottom
-                self.vy = 0
-                self.rect.y = self.y
+
                 
 
     # old motion
@@ -276,11 +260,11 @@ class Player(pg.sprite.Sprite):
         if not self.cooling:
             self.collide_with_group(self.game.power_ups, True)
         self.collide_with_group(self.game.mobs, False)
-        if Player.hitpoints <= 0:
+        if self.hitpoints <= 0:
             self.kill()
-        if Player.hitpoints > self.maxhp:
-            Player.hitpoints = self.maxhp
-            print(Player.hitpoints)
+        if self.hitpoints > self.maxhp:
+            self.hitpoints = self.maxhp
+            print(self.hitpoints)
 
     def levelup(self):
         if Player.exp >= 10 and Player.exp <= 50:
@@ -319,10 +303,31 @@ class Wall(pg.sprite.Sprite):
         # if self.rect.y > HEIGHT or self.rect.y < 0:
         #     self.speed *= -1
 
+class Tree(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.walls
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = self.game.tree_img
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+        self.speed = 0
+    def update(self):
+        # self.rect.x += 1
+        self.rect.x += TILESIZE * self.speed
+        # self.rect.y += TILESIZE * self.speed
+        if self.rect.x > WIDTH or self.rect.x < 0:
+            self.speed *= -1
+        # if self.rect.y > HEIGHT or self.rect.y < 0:
+        #     self.speed *= -1
+
 #This is the wall
 class Wall2(pg.sprite.Sprite):
     def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.walls2
+        self.groups = game.all_sprites, game.walls
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = self.game.dirt_img
@@ -372,40 +377,6 @@ class PowerUp(pg.sprite.Sprite):
 
 
 #This is the first mob. It is weak.
-class Mob(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.mobs
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
-        self.image = self.game.mob_img
-        self.rect = self.image.get_rect()
-        self.pos = vec(x, y) * TILESIZE
-        self.vel = vec(0, 0)
-        self.acc = vec(0, 0)
-        self.rect.center = self.pos
-        self.rot = 0
-        # added
-        self.speed = 150
-        #This is the mob's health
-        self.hitpoints = 5
-
-#This is how the mob tracks the player
-    def update(self):
-        self.rot = (self.game.player.rect.center - self.pos).angle_to(vec(1, 0))
-        self.rect.center = self.pos
-        self.acc = vec(self.speed, 0).rotate(-self.rot)
-        self.acc += self.vel * -1
-        self.vel += self.acc * self.game.dt
-        self.pos += self.vel * self.game.dt + 0.5 * self.acc * self.game.dt ** 2
-        collide_with_walls(self, self.game.walls, 'x')
-        collide_with_walls(self, self.game.walls, 'y')
-        #This will kill the mob if it's health reaches 0...
-        if self.hitpoints <= 0:
-            self.kill()
-            Player.exp += 100
-            Player.hitpoints += 50
-            Player.killmobs = True
-
 
 #Same as mob but stronger and has more health
 class Mob2(pg.sprite.Sprite):
@@ -451,7 +422,7 @@ class Mob2(pg.sprite.Sprite):
         #Same as first mob... gl killing it tho
         if self.hitpoints <= 0:
             self.kill()
-            Player.exp += 500
+            Player.exp += 100
             print(Player.exp)
             Player.hitpoints += 150
             Player.killmobs = True

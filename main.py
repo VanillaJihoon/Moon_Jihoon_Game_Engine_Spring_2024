@@ -60,6 +60,7 @@ class Game:
         self.ghost_img = pg.image.load(path.join(img_folder, 'ghost_img.png')).convert_alpha()
         self.dirt_img = pg.image.load(path.join(img_folder, 'dirt_img.png')).convert_alpha()
         self.map_data = []
+        self.tree_img = pg.image.load(path.join(img_folder, 'tree_img.png')).convert_alpha()
         #WIth statement is a context manager
         #used to ensure a resource is properly closed or released after it is used
         #This helps to prevent errors.
@@ -77,7 +78,6 @@ class Game:
         print("create new game...")
         self.all_sprites = pg.sprite.Group()
         self.walls = pg.sprite.Group()
-        self.walls2 = pg.sprite.Group()
         self.coins = pg.sprite.Group()
         self.mobs = pg.sprite.Group()
         self.mobs2 = pg.sprite.Group()
@@ -102,7 +102,7 @@ class Game:
                 if tile == '3':
                     Coin(self, col, row)
                 if tile == '4':
-                    Mob(self, col, row)
+                    Tree(self, col, row)
                 if tile == '5':
                     PowerUp(self, col, row)
                 if tile == '6':
@@ -136,7 +136,7 @@ class Game:
             self.draw_text(self.screen, str(self.mob_timer.get_countdown()), 24, WHITE, WIDTH/2 - 32, 60)
             self.draw_text(self.screen, str(self.cooldown.get_countdown()), 24, WHITE, WIDTH/2 - 32, 120)
             self.draw_text(self.screen, str(self.flying.get_countdown()), 24, WHITE, WIDTH/2 - 32, 90)
-            self.draw_text(self.screen, self.player.hitpoints, 24, WHITE, WIDTH/2 - 32, 90)
+            self.draw_text(self.screen, str(self.player.hitpoints), 100, GREEN, WIDTH/2- 400, 0)
             pg.display.flip()
 
     def quit(self):
