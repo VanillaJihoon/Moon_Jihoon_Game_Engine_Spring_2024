@@ -70,6 +70,7 @@ class Player(pg.sprite.Sprite):
         self.status = ""
         Player.killmobs = False
         self.maxhp = 100
+        Player.hitpoints = 100
         self.cooling = False
         self.last_shot_time = 0
         self.last_molt_time = 0
@@ -77,7 +78,6 @@ class Player(pg.sprite.Sprite):
         self.weapon_drawn = False
         Player.rot = False
         Player.small = True
-        self.hitpoints = 100
         Player.exp = 0
         self.pos = vec(0,0)
         self.dir = vec(0,0)
@@ -237,6 +237,7 @@ class Player(pg.sprite.Sprite):
         self.get_keys()
         # needed for animated sprite
         self.animate()
+        #adapted from ChatGPT
         if Player.killmobs == True:
             self.levelup()
             self.bigspider()
@@ -260,11 +261,11 @@ class Player(pg.sprite.Sprite):
         if not self.cooling:
             self.collide_with_group(self.game.power_ups, True)
         self.collide_with_group(self.game.mobs, False)
-        if self.hitpoints <= 0:
+        if Player.hitpoints <= 0:
             self.kill()
-        if self.hitpoints > self.maxhp:
-            self.hitpoints = self.maxhp
-            print(self.hitpoints)
+        if Player.hitpoints > self.maxhp:
+            Player.hitpoints = self.maxhp
+            print(Player.hitpoints)
 
     def levelup(self):
         if Player.exp >= 10 and Player.exp <= 50:
@@ -454,7 +455,7 @@ class Ghost(pg.sprite.Sprite):
         # added
         self.speed = 100
         #Health is big
-        self.hitpoints = 10000000
+        self.hitpoints = 100000
         #adapted from ChatGPT
         self.scale_factor = 5  # Change this value to scale the sprite as desired
         self.scale_images()  # Call scale_images to resize the images
@@ -489,7 +490,6 @@ class Ghost(pg.sprite.Sprite):
         self.acc += self.vel * -1
         self.vel += self.acc * self.game.dt
         self.pos += self.vel * self.game.dt + 0.5 * self.acc * self.game.dt ** 2
-        #This will kill the mob if it's health reaches 0...
         if self.hitpoints <= 0:
             self.kill()
             
@@ -528,8 +528,8 @@ class PewPew(pg.sprite.Sprite):
             if str(hits[0].__class__.__name__) == "Ghost":
                 if Player.big == True and Player.small == False:
                     hits[0].hitpoints -= 200000
-                if Player.big == False and Player.small == True:
-                    hits[0].hitpoints -= 1
+                else:
+                    pass
 
             # self.kill()
 
